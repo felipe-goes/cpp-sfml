@@ -1,0 +1,6 @@
+﻿---
+BreakBeforeBraces: Allman
+AlignConsecutiveMacros: true
+IndentWidth: 2
+
+...
