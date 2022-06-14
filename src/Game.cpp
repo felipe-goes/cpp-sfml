@@ -10,7 +10,16 @@ Game::Game()
 
 Game::~Game() { delete this->window; }
 
-void Game::initVariables(void) { this->window = nullptr; }
+void Game::initVariables(void)
+{
+  this->window = nullptr;
+
+  // Game logic
+  this->points = 0;
+  this->enemySpawnTimerMax = 1000.f;
+  this->enemySpawnTimer = this->enemySpawnTimerMax;
+  this->maxEnemies = 5;
+}
 
 void Game::initWindow(void)
 {
@@ -52,6 +61,82 @@ void Game::pollEvent(void)
   }
 }
 
+void Game::updateMousePositions(void)
+{
+  /*
+    @return void
+
+    Updates the mouse positions:
+    - Mouse position relative to window (Vector2i)
+  */
+
+  this->mousePosWindow = sf::Mouse::getPosition(*this->window);
+}
+
+void Game::renderEnemies()
+{
+  // Rendering all the enemies
+  for (auto &e : this->enemies)
+  {
+    this->window->draw(e);
+  }
+}
+
+void Game::updateEnemies()
+{
+  /*
+    @return void
+
+    Updates the enemy spawn timer and spawns enemies
+    when the total amount of enemies is smaller than
+    the maximum. Moves the enemies downwards.
+    Removes the enemies at the edge of the screen. // ToDo
+  */
+
+  // Updating the timer for enemy spawning
+  if (this->enemies.size() < this->maxEnemies)
+  {
+    // Spawn the enemy and reset the timer
+    if (this->enemySpawnTimer >= this->enemySpawnTimerMax)
+    {
+      this->spawnEnemy();
+      this->enemySpawnTimer = 0.f;
+    }
+    else
+      this->enemySpawnTimer += 1.f;
+  }
+
+  // Move the enemies
+  for (auto &e : this->enemies)
+  {
+    e.move(0.f, 1.f);
+  }
+}
+
+void Game::spawnEnemy()
+{
+  /*
+    @return void
+
+    Spawns enemies and sets their colors and positions.
+    - Sets a random position.
+    - Sets random color.
+    - Adds enemy to the vector.
+  */
+
+  this->enemy.setPosition(
+    static_cast<float>(rand() % static_cast<int>((this->window->getSize().x -
+                                                  this->enemy.getSize().x))),
+    0.f);
+
+  this->enemy.setFillColor(sf::Color::Green);
+
+  // Spawn the enemy
+  this->enemies.push_back(this->enemy);
+
+  // Remove the enemies at end of screen
+}
+
 // Accessors
 const bool Game::running(void) const { return this->window->isOpen(); }
 
@@ -59,31 +144,25 @@ const bool Game::running(void) const { return this->window->isOpen(); }
 void Game::update(void)
 {
   pollEvent();
-
-  // Update mouse position
-  // Relative to the screen
-  // std::cout << "Mouse pos: " << sf::Mouse::getPosition().x << " "
-  //           << sf::Mouse::getPosition().y << std::endl;
-  // Relative to the window
-  std::cout << "Mouse pos: " << sf::Mouse::getPosition(*this->window).x << " "
-            << sf::Mouse::getPosition(*this->window).y << std::endl;
+  updateMousePositions();
+  updateEnemies();
 }
 
 void Game::render(void)
 {
   /*
     @return void
+
+    Renders the game objects.
     - clear old frame
     - render objects
     - display framde in window
-
-    Renders the game objects.
   */
 
   this->window->clear(sf::Color::Blue); // Window Clear old frame
 
   // Draw game objects
-  this->window->draw(this->enemy);
+  this->renderEnemies();
 
   this->window->display(); // Tell app that window is done drawing
 }
