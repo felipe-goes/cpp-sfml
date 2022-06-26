@@ -1,8 +1,8 @@
 #pragma once
 
+#include <ctime>
 #include <iostream>
 #include <vector>
-#include <ctime>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
@@ -19,6 +19,7 @@ private:
 
   // Mouse positions
   sf::Vector2i mousePosWindow;
+  sf::Vector2f mousePosView;
 
   // Game logic
   int points;
