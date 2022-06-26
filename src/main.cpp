@@ -9,7 +9,7 @@ int main()
   Game game = Game();
 
   // Game loop
-  while (game.running())
+  while (game.running() && !game.getEndGame())
   {
     // Functions
     game.update();

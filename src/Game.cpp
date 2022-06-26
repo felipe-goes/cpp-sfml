@@ -15,10 +15,13 @@ void Game::initVariables(void)
   this->window = nullptr;
 
   // Game logic
+  this->endGame = false;
   this->points = 0;
+  this->health = 10;
   this->enemySpawnTimerMax = 10.f;
   this->enemySpawnTimer = this->enemySpawnTimerMax;
   this->maxEnemies = 10;
+  this->mouseHeld = false;
 }
 
 void Game::initWindow(void)
@@ -110,29 +113,42 @@ void Game::updateEnemies()
   // Moving and updating the enemies
   for (int i = 0; i < this->enemies.size(); i++)
   {
-    bool deleted = false;
     this->enemies[i].move(0.f, 5.f);
-
-    // Check if clicked upon
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-    {
-      if (this->enemies[i].getGlobalBounds().contains(this->mousePosView))
-      {
-        deleted = true;
-
-        // Gain points
-        this->points += 10.f;
-      }
-    }
 
     // If the enemy is past the bottom of the screen
     if (this->enemies[i].getPosition().y > this->window->getSize().y)
     {
-      deleted = true;
-    }
-
-    if (deleted)
       this->enemies.erase(this->enemies.begin() + i);
+      this->health -= 1;
+      std::cout << "Health: " << this->health << std::endl;
+    }
+  }
+
+  // Check if clicked upon
+  if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+  {
+    if (!this->mouseHeld)
+    {
+      this->mouseHeld = true;
+      bool deleted = false;
+      for (size_t i = 0; i < this->enemies.size() && !deleted; i++)
+      {
+        if (this->enemies[i].getGlobalBounds().contains(this->mousePosView))
+        {
+          // Delete the enemy
+          deleted = true;
+          this->enemies.erase(this->enemies.begin() + i);
+
+          // Gain points
+          this->points += 1.f;
+          std::cout << "Points: " << this->points << std::endl;
+        }
+      }
+    }
+  }
+  else
+  {
+    this->mouseHeld = false;
   }
 }
 
@@ -162,13 +178,22 @@ void Game::spawnEnemy()
 
 // Accessors
 const bool Game::running(void) const { return this->window->isOpen(); }
+const bool Game::getEndGame(void) const { return this->endGame; };
 
 // Functions
 void Game::update(void)
 {
   pollEvent();
-  updateMousePositions();
-  updateEnemies();
+
+  if (!this->endGame)
+  {
+    updateMousePositions();
+    updateEnemies();
+  }
+
+  // End game condition
+  if (this->health <= 0)
+    this->endGame = true;
 }
 
 void Game::render(void)
