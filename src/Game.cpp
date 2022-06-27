@@ -5,6 +5,8 @@ Game::Game()
 {
   initVariables();
   initWindow();
+  initFonts();
+  initText();
   initEnemies();
 }
 
@@ -35,6 +37,20 @@ void Game::initWindow(void)
   this->window->setFramerateLimit(60);
 }
 
+void Game::initFonts(void)
+{
+  if (!this->font.loadFromFile("../fonts/Roboto-Black.ttf"))
+    std::cout << "ERROR::GAME::INITFONTS::Failed to load font!" << std::endl;
+}
+
+void Game::initText(void)
+{
+  this->uiText.setFont(this->font);
+  this->uiText.setCharacterSize(24);
+  this->uiText.setFillColor(sf::Color::White);
+  this->uiText.setString("NONE");
+}
+
 void Game::initEnemies()
 {
   this->enemy.setPosition(10.f, 10.f);
@@ -45,7 +61,7 @@ void Game::initEnemies()
   // this->enemy.setOutlineThickness(1.f);
 }
 
-void Game::pollEvent(void)
+void Game::pollEvents(void)
 {
   // Event polling
   while (this->window->pollEvent(this->ev))
@@ -77,12 +93,23 @@ void Game::updateMousePositions(void)
   this->mousePosView = this->window->mapPixelToCoords(this->mousePosWindow);
 }
 
-void Game::renderEnemies()
+void Game::updateText(void)
+{
+  std::stringstream ss;
+  ss << "Points: " << this->points << std::endl
+     << "Health: " << this->health << std::endl;
+
+  this->uiText.setString(ss.str());
+}
+
+void Game::renderText(sf::RenderTarget &target) { target.draw(this->uiText); }
+
+void Game::renderEnemies(sf::RenderTarget &target)
 {
   // Rendering all the enemies
   for (auto &e : this->enemies)
   {
-    this->window->draw(e);
+    target.draw(e);
   }
 }
 
@@ -183,11 +210,12 @@ const bool Game::getEndGame(void) const { return this->endGame; };
 // Functions
 void Game::update(void)
 {
-  pollEvent();
+  pollEvents();
 
   if (!this->endGame)
   {
     updateMousePositions();
+    updateText();
     updateEnemies();
   }
 
@@ -210,7 +238,8 @@ void Game::render(void)
   this->window->clear(sf::Color::Blue); // Window Clear old frame
 
   // Draw game objects
-  this->renderEnemies();
+  this->renderEnemies(*this->window);
+  this->renderText(*this->window);
 
   this->window->display(); // Tell app that window is done drawing
 }
